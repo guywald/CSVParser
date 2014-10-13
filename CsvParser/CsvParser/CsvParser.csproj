@@ -39,7 +39,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CsvConfiguration.cs" />
     <Compile Include="CsvParser.cs" />
+    <Compile Include="CsvRow.cs" />
+    <Compile Include="DynamicDictionary.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
