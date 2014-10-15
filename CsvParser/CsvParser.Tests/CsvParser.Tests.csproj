@@ -51,6 +51,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="CsvMockClasses.cs" />
     <Compile Include="CsvParserUnitTests.cs" />
     <Compile Include="DynamicDictionaryTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
