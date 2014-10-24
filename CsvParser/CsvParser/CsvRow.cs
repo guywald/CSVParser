@@ -1,26 +1,42 @@
+using System.Collections.Generic;
 using System.Dynamic;
-using System.Linq.Expressions;
 
 namespace CsvParser
 {
-    public sealed class CsvRow : IDynamicMetaObjectProvider
+    public sealed class CsvRow : DynamicObject
     {
-        private readonly dynamic _csvFields;
-
         public CsvRow()
         {
-            _csvFields = new DynamicDictionary<string>();
-        }
-       
-        public string this[string key]
-        {
-            get { return _csvFields[key]; }
-            set { _csvFields[key] = value; }
+            _csvDynamicDictionary = new Dictionary<string, object>();
         }
 
-        public DynamicMetaObject GetMetaObject(Expression parameter)
+        private readonly Dictionary<string, object> _csvDynamicDictionary;
+
+        public object this[string key]
         {
-            return ((IDynamicMetaObjectProvider) _csvFields).GetMetaObject(Expression.Constant(_csvFields));
+            get { return _csvDynamicDictionary[key]; }
+            set { _csvDynamicDictionary[key] = value; }
+        }
+
+        public override bool TryGetMember(GetMemberBinder binder, out object result)
+        {
+            var binderName = binder.Name.ToLower();
+            return _csvDynamicDictionary.TryGetValue(binderName, out result);
+        }
+
+        public override bool TrySetMember(SetMemberBinder binder, object value)
+        {
+            string binderName = binder.Name.ToLower();
+            if (_csvDynamicDictionary.ContainsValue(value))
+            {
+                _csvDynamicDictionary[binderName] = value;
+            }
+            else
+            {
+                _csvDynamicDictionary.Add(binderName, value);
+            }
+
+            return true;
         }
     }
 }

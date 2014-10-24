@@ -1,53 +1,172 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using FastMember;
+using CsvParser.Exceptions;
 
 namespace CsvParser
 {
-    public sealed class CsvParser : IEnumerable<CsvRow>, IDisposable
+    public class CsvParser : ICsvParser, IEnumerable<CsvRow>, IDisposable
     {
         public CsvParser(string csvLocation)
             : this(csvLocation, new CsvConfiguration())
         {
-
         }
 
-        public CsvParser(string csvLocation, CsvConfiguration csvConfiguration) : this(new StreamReader(csvLocation), csvConfiguration)
+        public CsvParser(string csvLocation, CsvConfiguration csvConfiguration)
+            : this(new StreamReader(csvLocation), csvConfiguration)
         {
-
         }
 
         public CsvParser(StreamReader streamReader, CsvConfiguration csvConfiguration)
         {
             _streamReader = streamReader;
-            _csvConfiguration = csvConfiguration;
-            ParseCsvHeader();
+            CsvConfiguration = csvConfiguration;
+            Initialize();
         }
 
-        private readonly CsvConfiguration _csvConfiguration;
         private string[] _header;
+        private long _currentLinePosition;
         private int? _csvLineCount;
         private readonly StreamReader _streamReader;
 
-        public void Initialize()
+        private void Initialize()
         {
+            ParseCsvHeader();
             GenerateCount();
         }
-
-        public Task InitializeAsync()
+        private List<CsvRow> WhereInternal<T>(string fieldName, Predicate<T> predicate) where T : IComparable<T>, IConvertible
         {
-            return GenerateCountAsync();
+            if (string.IsNullOrEmpty(fieldName))
+            {
+                throw new ArgumentException("Field cannot be null or empty", fieldName);
+            }
+
+            var csvRows = new List<CsvRow>();
+            while (!_streamReader.EndOfStream)
+            {
+                string currentRow = ReadLine();
+                dynamic parsedRow = ParseRow(currentRow);
+
+                string parsedField = null;
+
+                try
+                {
+                    parsedField = parsedRow[fieldName];
+
+                    T convertedField = (T) Convert.ChangeType(parsedField, typeof (T));
+                    if (predicate(convertedField))
+                    {
+                        csvRows.Add(parsedRow);
+                    }
+                }
+                catch (KeyNotFoundException e)
+                {
+                    throw new CsvParseException(
+                        string.Format("The given key {0} is not a field header in the CSV file", fieldName), e);
+                }
+                catch (FormatException e)
+                {
+                    throw new CsvParseException(string.Format("Could not convert CSV field \"{0}\" to type {1}", parsedField,
+                        typeof (T).FullName), e);
+                }
+            }
+
+            ResetStreamToBeginning();
+            return csvRows;
+        }
+        private dynamic ParseRow(string row)
+        {
+            string[] splitRow = row.Split(CsvConfiguration.Delimiter);
+
+            dynamic csvRow = new CsvRow();
+
+            int index = 0;
+            foreach (var title in _header)
+            {
+                csvRow[title] = splitRow[index].Trim();
+                index++;
+            }
+
+            return csvRow;
         }
 
+        private void ParseCsvHeader()
+        {
+            string concatHeader = _streamReader.ReadLine();
+            if (concatHeader != null)
+            {
+                ParseHeaderInternal(concatHeader);
+            }
+        }
+
+        private void ParseHeaderInternal(string concatHeader)
+        {
+            _header =
+                concatHeader.Split(CsvConfiguration.Delimiter).Select(header => header.ToLower().Trim()).ToArray();
+
+            ResetStreamToBeginning();
+        }
+
+        private void GenerateCount()
+        {
+            _csvLineCount = 0;
+
+            while (ReadLine() != null)
+            {
+                _csvLineCount++;
+            }
+
+            ResetStreamToBeginning();
+        }
+
+        private void ResetStreamToBeginning()
+        {
+            _currentLinePosition = 0;
+            _streamReader.BaseStream.Position = 0;
+            _streamReader.DiscardBufferedData();
+            ReadLine();
+        }
+
+        private string ReadLine()
+        {
+            _currentLinePosition++;
+            return _streamReader.ReadLine();
+        }
+
+        /// <summary>
+        /// Indicates if the underlying CSV is empty
+        /// </summary>
         public bool IsEmpty
         {
-            get { return Count != 0; }
+            get { return Count == 0; }
         }
+
+        /// <summary>
+        /// Searches for equality given a field name and value
+        /// </summary>
+        /// <typeparam name="T">Field value type</typeparam>
+        /// <param name="fieldName">The field name in the CSV header</param>
+        /// <param name="fieldValue">The value to match agains't</param>
+        /// <returns>A list of matching rows</returns>
+        public List<CsvRow> WhereEquals<T>(string fieldName, T fieldValue) where T : IComparable<T>, IConvertible
+        {
+            return WhereInternal<T>(fieldName, convertedValue => fieldValue.CompareTo(convertedValue) == Decimal.Zero);
+        }
+
+        public List<CsvRow> WhereGreaterThan<T>(string fieldName, T fieldValue) where T : IComparable<T>, IConvertible
+        {
+            return WhereInternal<T>(fieldName, convertedValue => fieldValue.CompareTo(convertedValue) < Decimal.Zero);
+        }
+
+        public List<CsvRow> WhereLessThan<T>(string fieldName, T fieldValue) where T : IComparable<T>, IConvertible
+        {
+            return WhereInternal<T>(fieldName, convertedValue => fieldValue.CompareTo(convertedValue) > Decimal.Zero);
+        }
+
+
+        public CsvConfiguration CsvConfiguration { get; private set; }
 
         public int Count
         {
@@ -70,28 +189,33 @@ namespace CsvParser
             {
                 if (index > Count)
                 {
-                    throw new IndexOutOfRangeException(string.Format("Index {0} exceeds CSV line count ({1})", index,
-                        Count));
+                    throw new ArgumentOutOfRangeException("index");
                 }
 
-                int linePosition = 0;
-                while (linePosition < index)
+                if (_currentLinePosition > index)
                 {
-                    _streamReader.ReadLine();
-                    linePosition++;
+                    ResetStreamToBeginning();
                 }
 
-                string desireRow = _streamReader.ReadLine();
-                return ParseRow<ExpandoObject>(desireRow);
+                while (_currentLinePosition < index + 1)
+                {
+                    ReadLine();
+                }
+
+                string desireRow = ReadLine();
+                dynamic parsedRow = ParseRow(desireRow);
+
+                return parsedRow;
             }
         }
 
         public IEnumerator<CsvRow> GetEnumerator()
         {
             string csvLine;
-            while ((csvLine = _streamReader.ReadLine()) != null)
+
+            while ((csvLine = ReadLine()) != null)
             {
-                yield return ParseRow<CsvRow>(csvLine);
+                yield return ParseRow(csvLine);
             }
         }
 
@@ -102,88 +226,16 @@ namespace CsvParser
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            Dispose(true);
         }
 
-        private void Dispose(bool disposing)
+        protected virtual void Dispose(bool disposing)
         {
-            
-        }
-
-        private dynamic ParseRow<T>(string row) where T : IDynamicMetaObjectProvider, new()
-        {
-            string[] splitRow = row.Split(_csvConfiguration.Delimiter);
-
-            ObjectAccessor objectAccessor = ObjectAccessor.Create(new T());
-
-            int index = 0;
-            foreach (var header in _header)
+            if (disposing)
             {
-                objectAccessor[header] = splitRow[index].Trim();
-                index++;
-            }
-
-            return objectAccessor.Target;
-        }
-
-        private void ParseCsvHeader()
-        {
-            string concatHeader = _streamReader.ReadLine();
-            if (concatHeader != null)
-            {
-                ParseHeaderInternal(concatHeader);
-            }
-
-            ResetStreamPosition();  
-        }
-
-        private async Task ParseCsvHeaderAsync()
-        {
-            string concatHeader = await _streamReader.ReadLineAsync();
-            if (concatHeader != null)
-            {
-                ParseHeaderInternal(concatHeader);
+                _streamReader.Dispose();
             }
         }
 
-        private void ParseHeaderInternal(string concatHeader)
-        {
-            _header =
-                concatHeader.Split(_csvConfiguration.Delimiter).Select(header => header.ToLower().Trim()).ToArray();
-        }
-
-        private async Task GenerateCountAsync()
-        {
-            if (_csvLineCount != null)
-            {
-                return;
-            }
-
-            _csvLineCount = 0;
-            while (await _streamReader.ReadLineAsync() != null)
-            {
-                _csvLineCount++;
-            }
-
-            ResetStreamPosition();
-        }
-
-        private void GenerateCount()
-        {
-            _csvLineCount = 0;
-
-            while (_streamReader.ReadLine() != null)
-            {
-                _csvLineCount++;
-            }
-
-            ResetStreamPosition();
-        }
-
-        private void ResetStreamPosition()
-        {
-            _streamReader.BaseStream.Position = 0;
-            _streamReader.DiscardBufferedData();
-        }
     }
 }

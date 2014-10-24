@@ -66,5 +66,10 @@ namespace CsvParser
 
             return true;
         }
+
+        public virtual bool ContainsKey(string key)
+        {
+            return _dictionary.ContainsKey(key);
+        }
     }
 }
