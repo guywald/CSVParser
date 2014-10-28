@@ -27,3 +27,5 @@ You may also query the CSV using `WhereEqual`, `WhereGreaterThan` and `WhereLess
     List<CsvRow> matches = csv.WhereEquals("status", "OK");
     matches = csv.WhereGreaterThan("status", 200);
     matches = csv.WhereLessThan("status", 500);
+    
+Each query will return a `List<CsvRow>` where CsvRow is a dynamic object containing the CSV's fields.
