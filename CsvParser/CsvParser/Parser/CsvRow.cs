@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Dynamic;
 
-namespace CsvParser
+namespace CsvParser.Parser
 {
     public sealed class CsvRow : DynamicObject
     {

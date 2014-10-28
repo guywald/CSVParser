@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Text;
 
-namespace CsvParser
+namespace CsvParser.Configuration
 {
     public class CsvConfiguration
     {
         public CsvConfiguration()
         {
             Delimiter = ',';
-            BufferSize = 2048;
+            BufferSize = 4096;
             Encoding = Encoding.UTF8;
         }
 
@@ -39,6 +39,5 @@ namespace CsvParser
         public int BufferSize { get; set; }
         public Encoding Encoding { get; set; }
         public bool IgnoreWhiteSpaces { get; set; }
-        public bool RemoveEmptyLines { get; set; }
     }
 }

@@ -1,10 +1,9 @@
-﻿using System;
+﻿using CsvParser.Configuration;
+using CsvParser.Parser;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace CsvParser
+namespace CsvParser.Interfaces
 {
     public interface ICsvParser
     {

@@ -43,19 +43,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configuration\CsvConfiguration.cs" />
-    <Compile Include="CsvParser.cs" />
-    <Compile Include="CsvRow.cs" />
-    <Compile Include="DynamicDictionary.cs" />
+    <Compile Include="Parser\CsvParser.cs" />
+    <Compile Include="Parser\CsvRow.cs" />
     <Compile Include="Exceptions\CsvParseException.cs" />
-    <Compile Include="ICsvParser.cs" />
+    <Compile Include="Interfaces\ICsvParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Interfaces\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

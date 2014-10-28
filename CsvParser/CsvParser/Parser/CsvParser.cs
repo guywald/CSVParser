@@ -1,11 +1,13 @@
-﻿using System;
+﻿using CsvParser.Configuration;
+using CsvParser.Exceptions;
+using CsvParser.Interfaces;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CsvParser.Exceptions;
 
-namespace CsvParser
+namespace CsvParser.Parser
 {
     public class CsvParser : ICsvParser, IEnumerable<CsvRow>, IDisposable
     {
@@ -15,7 +17,7 @@ namespace CsvParser
         }
 
         public CsvParser(string csvLocation, CsvConfiguration csvConfiguration)
-            : this(new StreamReader(csvLocation), csvConfiguration)
+            : this(new StreamReader(csvLocation, csvConfiguration.Encoding, false, csvConfiguration.BufferSize), csvConfiguration)
         {
         }
 
@@ -49,6 +51,11 @@ namespace CsvParser
                 string currentRow = ReadLine();
                 dynamic parsedRow = ParseRow(currentRow);
 
+                if (parsedRow == null)
+                {
+                    continue;
+                }
+
                 string parsedField = null;
 
                 try
@@ -80,12 +87,24 @@ namespace CsvParser
         {
             string[] splitRow = row.Split(CsvConfiguration.Delimiter);
 
+            // If a row is empty, we'll return null as an indicator.
+            if (splitRow.All(string.IsNullOrEmpty))
+            {
+                return null;
+            }
+
+            if (splitRow.Count() != _header.Count())
+            {
+                throw new CsvParseException(
+                    "Header count does not match row value count. Please make sure your CSV is valid.");
+            }
+
             dynamic csvRow = new CsvRow();
 
             int index = 0;
             foreach (var title in _header)
             {
-                csvRow[title] = splitRow[index].Trim();
+                csvRow[title] = CsvConfiguration.IgnoreWhiteSpaces ? splitRow[index].Trim() : splitRow[index];
                 index++;
             }
 
@@ -155,19 +174,38 @@ namespace CsvParser
             return WhereInternal<T>(fieldName, convertedValue => fieldValue.CompareTo(convertedValue) == Decimal.Zero);
         }
 
+        /// <summary>
+        /// Searches for a field containing the given field name with a value greater than the specified value
+        /// </summary>
+        /// <typeparam name="T">An IComparable type</typeparam>
+        /// <param name="fieldName">The name of the field to search</param>
+        /// <param name="fieldValue">The value it should be greater than</param>
+        /// <returns></returns>
         public List<CsvRow> WhereGreaterThan<T>(string fieldName, T fieldValue) where T : IComparable<T>, IConvertible
         {
             return WhereInternal<T>(fieldName, convertedValue => fieldValue.CompareTo(convertedValue) < Decimal.Zero);
         }
 
+        /// <summary>
+        /// Searches for a field containing the given field name with a value less than the specified value
+        /// </summary>
+        /// <typeparam name="T">An IComparable type</typeparam>
+        /// <param name="fieldName">The name of the field to search</param>
+        /// <param name="fieldValue">The value it should be less than</param>
+        /// <returns></returns>
         public List<CsvRow> WhereLessThan<T>(string fieldName, T fieldValue) where T : IComparable<T>, IConvertible
         {
             return WhereInternal<T>(fieldName, convertedValue => fieldValue.CompareTo(convertedValue) > Decimal.Zero);
         }
 
-
+        /// <summary>
+        /// A configuration for the CsvParser
+        /// </summary>
         public CsvConfiguration CsvConfiguration { get; private set; }
 
+        /// <summary>
+        /// The row count of the CSV file. It is inclusive of the header row
+        /// </summary>
         public int Count
         {
             get
@@ -183,6 +221,11 @@ namespace CsvParser
             }
         }
 
+        /// <summary>
+        /// Indexer for the CSV file. Will search the file for the given line number.
+        /// </summary>
+        /// <param name="index">Row number to return</param>
+        /// <returns>A CsvRow object containing the parsed row</returns>
         public dynamic this[int index]
         {
             get
@@ -192,7 +235,7 @@ namespace CsvParser
                     throw new ArgumentOutOfRangeException("index");
                 }
 
-                if (_currentLinePosition > index)
+                if (_currentLinePosition > index || _streamReader.EndOfStream)
                 {
                     ResetStreamToBeginning();
                 }
@@ -209,13 +252,29 @@ namespace CsvParser
             }
         }
 
+        /// <summary>
+        /// Current line number in the CSV file.
+        /// </summary>
+        public long CurrentLine
+        {
+            get { return _currentLinePosition; }
+        }
+        
+        /// <summary>
+        /// An iterator for a given CsvParser
+        /// </summary>
+        /// <returns></returns>
         public IEnumerator<CsvRow> GetEnumerator()
         {
             string csvLine;
 
             while ((csvLine = ReadLine()) != null)
             {
-                yield return ParseRow(csvLine);
+                CsvRow row;
+                if ((row = ParseRow(csvLine)) != null)
+                {
+                    yield return row;
+                }
             }
         }
 
@@ -224,6 +283,9 @@ namespace CsvParser
             return GetEnumerator();
         }
 
+        /// <summary>
+        /// Disposes the underlying Stream.
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);
