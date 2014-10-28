@@ -19,8 +19,11 @@ Has a very simple API. You may iterate it using foreach or accessing a specific 
             Console.WriteLine("{0}: {1}", row["time"], row["result"]);
         }
     }
+    
+You may iterate it using foreach or access a specific row using an indexer.
+
+You may also query the CSV using `WhereEqual`, `WhereGreaterThan` and `WhereLessThan`:
+
     List<CsvRow> matches = csv.WhereEquals("status", "OK");
     matches = csv.WhereGreaterThan("status", 200);
     matches = csv.WhereLessThan("status", 500);
-    
-You may iterate it using foreach or access a specific row using an indexer.
