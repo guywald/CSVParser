@@ -1,4 +1,6 @@
-﻿using CsvParser.Exceptions;
+﻿using System.Collections.Generic;
+using CsvParser.Exceptions;
+using CsvParser.Parser;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Diagnostics;
@@ -15,6 +17,31 @@ namespace CsvParser.Tests
         {
             Parser.CsvParser parser = new Parser.CsvParser(@"D:\TestCsvFile.csv");
             Assert.AreEqual(5, parser.Count, "There aren't 5 lines");
+        }
+
+        [TestMethod]
+        public void CsvParser_CompleteRequestedAPI()
+        {
+
+            Parser.CsvParser csv = new Parser.CsvParser(@"D:\TestCsvFile.csv");
+            if (!csv.IsEmpty)
+            {
+                int count = csv.Count;
+                for (int i = 0; i < csv.Count; ++i)
+                {
+                    dynamic row = csv[i];
+                    Console.WriteLine("{0}: {1}", row.time, row.result);
+                }
+                foreach (CsvRow row in csv)
+                {
+                    Console.WriteLine("{0}: {1}", row["time"], row["result"]);
+                }
+            }
+
+            List<CsvRow> matches = csv.WhereEquals("status", "OK");
+            matches = csv.WhereGreaterThan("status", 200);
+            matches = csv.WhereLessThan("status", 500);
+
         }
 
         [TestMethod]
@@ -101,7 +128,7 @@ namespace CsvParser.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof (CsvParseException))]
+        [ExpectedException(typeof(CsvParseException))]
         public void CsvParser_MoreHeadersThanRows_CsvParseException()
         {
             Parser.CsvParser parser = new Parser.CsvParser(@"D:\CsvEmptyLine.csv");

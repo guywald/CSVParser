@@ -46,41 +46,44 @@ namespace CsvParser.Parser
             }
 
             var csvRows = new List<CsvRow>();
-            while (!_streamReader.EndOfStream)
+            string parsedField = null;
+
+            try
             {
-                string currentRow = ReadLine();
-                dynamic parsedRow = ParseRow(currentRow);
-
-                if (parsedRow == null)
+                while (!_streamReader.EndOfStream)
                 {
-                    continue;
-                }
+                    string currentRow = ReadLine();
+                    dynamic parsedRow = ParseRow(currentRow);
 
-                string parsedField = null;
+                    if (parsedRow == null)
+                    {
+                        continue;
+                    }
 
-                try
-                {
                     parsedField = parsedRow[fieldName];
 
-                    T convertedField = (T) Convert.ChangeType(parsedField, typeof (T));
+                    T convertedField = (T)Convert.ChangeType(parsedField, typeof(T));
                     if (predicate(convertedField))
                     {
                         csvRows.Add(parsedRow);
                     }
                 }
-                catch (KeyNotFoundException e)
-                {
-                    throw new CsvParseException(
-                        string.Format("The given key {0} is not a field header in the CSV file", fieldName), e);
-                }
-                catch (FormatException e)
-                {
-                    throw new CsvParseException(string.Format("Could not convert CSV field \"{0}\" to type {1}", parsedField,
-                        typeof (T).FullName), e);
-                }
+            }
+            catch (KeyNotFoundException e)
+            {
+                throw new CsvParseException(
+                    string.Format("The given key {0} is not a field header in the CSV file", fieldName), e);
+            }
+            catch (FormatException e)
+            {
+                throw new CsvParseException(string.Format("Could not convert CSV field \"{0}\" to type {1}", parsedField,
+                    typeof(T).FullName), e);
+            }
+            finally
+            {
+                ResetStreamToBeginning();
             }
 
-            ResetStreamToBeginning();
             return csvRows;
         }
         private dynamic ParseRow(string row)
@@ -259,13 +262,18 @@ namespace CsvParser.Parser
         {
             get { return _currentLinePosition; }
         }
-        
+
         /// <summary>
         /// An iterator for a given CsvParser
         /// </summary>
         /// <returns></returns>
         public IEnumerator<CsvRow> GetEnumerator()
         {
+            if (_streamReader.EndOfStream)
+            {
+                ResetStreamToBeginning();
+            }
+
             string csvLine;
 
             while ((csvLine = ReadLine()) != null)
