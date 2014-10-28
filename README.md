@@ -1,4 +1,26 @@
 CsvParser
 =========
 
-A simple CSV parser
+A simple CSV parser. 
+
+Has a very simple API. You may iterate it using foreach or accessing a specific row via an indexer:
+
+    CsvParser csv = new CsvParser(@"D:\TestCsvFile.csv");
+    if (!csv.IsEmpty)
+    {
+        int count = csv.Count;
+        for (int i = 0; i < csv.Count; ++i)
+        {
+            dynamic row = csv[i];
+            Console.WriteLine("{0}: {1}", row.time, row.result);
+        }
+        foreach (CsvRow row in csv)
+        {
+            Console.WriteLine("{0}: {1}", row["time"], row["result"]);
+        }
+    }
+    List<CsvRow> matches = csv.WhereEquals("status", "OK");
+    matches = csv.WhereGreaterThan("status", 200);
+    matches = csv.WhereLessThan("status", 500);
+    
+You may iterate it using foreach or access a specific row using an indexer.
