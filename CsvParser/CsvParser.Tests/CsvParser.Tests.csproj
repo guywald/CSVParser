@@ -60,6 +60,12 @@
       <Name>CsvParser</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="TestBlobs\CsvEmptyLine.csv" />
+    <None Include="TestBlobs\MissingPropertyTest.csv" />
+    <None Include="TestBlobs\TenThounsandRowCsv.csv" />
+    <None Include="TestBlobs\TestCsvFile.csv" />
+  </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

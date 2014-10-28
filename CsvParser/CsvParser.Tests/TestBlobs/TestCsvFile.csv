@@ -1,0 +1,5 @@
+time,status,result 
+18:05,200,OK 
+18:02,302,Moved Permanently 
+18:02,404,Not Found 
+18:04,500,Internal Server Error 
