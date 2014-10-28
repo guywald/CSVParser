@@ -39,9 +39,13 @@ namespace CsvParser.Tests
             }
 
             List<CsvRow> matches = csv.WhereEquals("status", "OK");
-            matches = csv.WhereGreaterThan("status", 200);
-            matches = csv.WhereLessThan("status", 500);
+            Assert.AreEqual(matches.Count, 0);
 
+            matches = csv.WhereGreaterThan("status", 200);
+            Assert.AreEqual(matches.Count, 3);
+
+            matches = csv.WhereLessThan("status", 500);
+            Assert.AreEqual(matches.Count, 3);
         }
 
         [TestMethod]
