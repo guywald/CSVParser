@@ -244,9 +244,7 @@ namespace CsvParser.Parser
                 }
 
                 string desireRow = ReadLine();
-                dynamic parsedRow = ParseRow(desireRow);
-
-                return parsedRow;
+                return ParseRow(desireRow);
             }
         }
 
