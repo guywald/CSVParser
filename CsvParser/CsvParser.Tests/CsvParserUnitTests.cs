@@ -25,7 +25,7 @@ namespace CsvParser.Tests
             Parser.CsvParser csv = new Parser.CsvParser(@"D:\TestCsvFile.csv");
             if (!csv.IsEmpty)
             {
-                int count = csv.Count;
+                long count = csv.Count;
                 for (int i = 0; i < csv.Count; ++i)
                 {
                     dynamic row = csv[i];

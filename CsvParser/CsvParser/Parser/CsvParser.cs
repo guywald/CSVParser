@@ -30,7 +30,7 @@ namespace CsvParser.Parser
 
         private string[] _csvHeaders;
         private long _currentLinePosition;
-        private int? _csvLineCount;
+        private long? _csvLineCount;
         private readonly StreamReader _streamReader;
 
         private void Initialize()
@@ -131,7 +131,7 @@ namespace CsvParser.Parser
             ResetStreamToBeginning();
         }
 
-        private void GenerateCount()
+        private long GenerateCount()
         {
             _csvLineCount = 0;
 
@@ -141,6 +141,8 @@ namespace CsvParser.Parser
             }
 
             ResetStreamToBeginning();
+
+            return _csvLineCount.Value;
         }
 
         private void ResetStreamToBeginning()
@@ -209,18 +211,11 @@ namespace CsvParser.Parser
         /// <summary>
         /// The row count of the CSV file. It is inclusive of the header row
         /// </summary>
-        public int Count
+        public long Count
         {
             get
             {
-                if (_csvLineCount != null)
-                {
-                    return _csvLineCount.Value;
-                }
-
-                GenerateCount();
-
-                return (int)_csvLineCount;
+                return _csvLineCount != null ? _csvLineCount.Value : GenerateCount();
             }
         }
 
