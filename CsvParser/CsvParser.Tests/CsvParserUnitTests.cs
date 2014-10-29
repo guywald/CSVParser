@@ -80,8 +80,8 @@ namespace CsvParser.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(IndexOutOfRangeException))]
-        public void CsvParser_IndexIsOutOfRange_IndexOutOfRangeException()
+        [ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void CsvParser_FetchAnUnreachableIndex_ArugmentOutOfRangeException()
         {
             Parser.CsvParser parser = new Parser.CsvParser(@"D:\TestCsvFile.csv");
             dynamic tenthLine = parser[10];
