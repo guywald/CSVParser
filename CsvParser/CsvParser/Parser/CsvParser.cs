@@ -243,7 +243,7 @@ namespace CsvParser.Parser
                     ResetStreamToBeginning();
                 }
 
-                while (_currentLinePosition < index + 1)
+                while (_currentLinePosition < index)
                 {
                     ReadLine();
                 }

@@ -13,6 +13,7 @@ namespace CsvParser.Configuration
             Delimiter = ',';
             BufferSize = 4096;
             Encoding = Encoding.UTF8;
+            IgnoreWhiteSpaces = true;
         }
 
         private char _delimiter;
@@ -51,7 +52,7 @@ namespace CsvParser.Configuration
         /// </summary>
         public Encoding Encoding { get; set; }
         /// <summary>
-        /// Ignore whitespaces in csv fields and headers.
+        /// Ignore whitespaces in csv fields and headers. Defaults to true
         /// </summary>
         public bool IgnoreWhiteSpaces { get; set; }
     }
