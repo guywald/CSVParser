@@ -28,7 +28,7 @@ namespace CsvParser.Parser
             Initialize();
         }
 
-        private string[] _header;
+        private string[] _csvHeaders;
         private long _currentLinePosition;
         private int? _csvLineCount;
         private readonly StreamReader _streamReader;
@@ -96,7 +96,7 @@ namespace CsvParser.Parser
                 return null;
             }
 
-            if (splitRow.Count() != _header.Count())
+            if (splitRow.Count() != _csvHeaders.Count())
             {
                 throw new CsvParseException(
                     "Header count does not match row value count. Please make sure your CSV is valid.");
@@ -105,7 +105,7 @@ namespace CsvParser.Parser
             dynamic csvRow = new CsvRow();
 
             int index = 0;
-            foreach (var title in _header)
+            foreach (var title in _csvHeaders)
             {
                 csvRow[title] = CsvConfiguration.IgnoreWhiteSpaces ? splitRow[index].Trim() : splitRow[index];
                 index++;
@@ -125,7 +125,7 @@ namespace CsvParser.Parser
 
         private void ParseHeaderInternal(string concatHeader)
         {
-            _header =
+            _csvHeaders =
                 concatHeader.Split(CsvConfiguration.Delimiter).Select(header => header.ToLower().Trim()).ToArray();
 
             ResetStreamToBeginning();

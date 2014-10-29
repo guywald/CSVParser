@@ -11,7 +11,6 @@ namespace CsvParser.Tests
     [TestClass]
     public class CsvParserUnitTests
     {
-
         [TestMethod]
         public void CsvParser_LineCountEquality_Calculated()
         {
