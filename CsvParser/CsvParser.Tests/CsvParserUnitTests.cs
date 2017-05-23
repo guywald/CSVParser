@@ -129,16 +129,5 @@ namespace CsvParser.Tests
             Parser.CsvParser parser = new Parser.CsvParser(@"C:\csv_parser_examples\TenThounsandRowCsv.csv");
             dynamic row = parser[int.MaxValue];
         }
-
-        [TestMethod]
-        [ExpectedException(typeof(CsvParseException))]
-        public void CsvParser_MoreHeadersThanRows_CsvParseException()
-        {
-            Parser.CsvParser parser = new Parser.CsvParser(@"D:\CsvEmptyLine.csv");
-            foreach (var row in parser)
-            {
-                Debug.WriteLine(row["time"]);
-            }
-        }
     }
 }
