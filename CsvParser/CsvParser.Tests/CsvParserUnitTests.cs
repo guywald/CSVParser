@@ -14,15 +14,15 @@ namespace CsvParser.Tests
         [TestMethod]
         public void CsvParser_LineCountEquality_Calculated()
         {
-            Parser.CsvParser parser = new Parser.CsvParser(@"D:\TestCsvFile.csv");
-            Assert.AreEqual(5, parser.Count, "There aren't 5 lines");
+            Parser.CsvParser parser = new Parser.CsvParser(@"C:\csv_parser_examples\TestCsvFile.csv");
+            Assert.AreEqual(4, parser.Count, "There aren't 4 lines");
         }
 
         [TestMethod]
         public void CsvParser_CompleteRequestedAPI()
         {
 
-            Parser.CsvParser csv = new Parser.CsvParser(@"D:\TestCsvFile.csv");
+            Parser.CsvParser csv = new Parser.CsvParser(@"C:\csv_parser_examples\TestCsvFile.csv");
             if (!csv.IsEmpty)
             {
                 long count = csv.Count;
@@ -71,7 +71,7 @@ namespace CsvParser.Tests
         [TestMethod]
         public void CsvParser_ShouldParseFifthRow()
         {
-            Parser.CsvParser parser = new Parser.CsvParser(@"D:\TestCsvFile.csv");
+            Parser.CsvParser parser = new Parser.CsvParser(@"C:\csv_parser_examples\TestCsvFile.csv");
             dynamic fifthLine = parser[4];
             Assert.AreEqual(fifthLine.time, "18:04");
             Assert.AreEqual(fifthLine.status, "500");
@@ -82,14 +82,14 @@ namespace CsvParser.Tests
         [ExpectedException(typeof(ArgumentOutOfRangeException))]
         public void CsvParser_FetchAnUnreachableIndex_ArugmentOutOfRangeException()
         {
-            Parser.CsvParser parser = new Parser.CsvParser(@"D:\TestCsvFile.csv");
+            Parser.CsvParser parser = new Parser.CsvParser(@"C:\csv_parser_examples\TestCsvFile.csv");
             dynamic tenthLine = parser[10];
         }
 
         [TestMethod]
         public void CsvParser_IterateUsingIndexer()
         {
-            Parser.CsvParser parser = new Parser.CsvParser(@"D:\TenThounsandRowCsv.csv");
+            Parser.CsvParser parser = new Parser.CsvParser(@"C:\csv_parser_examples\TenThounsandRowCsv.csv");
             var sw = new Stopwatch();
             sw.Start();
             for (int i = 0; i < parser.Count; i++)
@@ -108,7 +108,7 @@ namespace CsvParser.Tests
         [TestMethod]
         public void CsvParser_IterateUsingEnumerator()
         {
-            Parser.CsvParser parser = new Parser.CsvParser(@"D:\TenThounsandRowCsv.csv");
+            Parser.CsvParser parser = new Parser.CsvParser(@"C:\csv_parser_examples\TenThounsandRowCsv.csv");
             int index = 0;
             var sw = new Stopwatch();
             sw.Start();
@@ -126,7 +126,7 @@ namespace CsvParser.Tests
         [ExpectedException(typeof(ArgumentOutOfRangeException))]
         public void CsvParser_AccessViaOutOfRangeIndexer_ArgumentOutOfRangeException()
         {
-            Parser.CsvParser parser = new Parser.CsvParser(@"D:\TenThounsandRowCsv.csv");
+            Parser.CsvParser parser = new Parser.CsvParser(@"C:\csv_parser_examples\TenThounsandRowCsv.csv");
             dynamic row = parser[int.MaxValue];
         }
 
